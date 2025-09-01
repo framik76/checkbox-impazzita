@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Non sono un robot</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f4f4f4;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        #fake-captcha {
+            position: absolute;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 8px 14px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            user-select: none;
+            transition: left 0.2s ease, top 0.2s ease;
+        }
+        #final-message {
+            font-size: 2rem;
+            font-weight: bold;
+            display: none;
+            color: white;
+        }
+        #blackout {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: black;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <div id="fake-captcha">
+        <input type="checkbox" id="checkbox">
+        <label for="checkbox">&nbsp; Non sono un robot</label>
+    </div>
+</div>
+<div id="blackout">
+    <div id="final-message">Sei un robot</div>
+</div>
+
+<script>
+    const captcha = document.getElementById("fake-captcha");
+    const blackout = document.getElementById("blackout");
+    const finalMessage = document.getElementById("final-message");
+
+    let attempts = 0;
+    let maxAttempts = 7;
+
+    function moveCaptcha() {
+        attempts++;
+
+        if (attempts >= maxAttempts) {
+            // Mostra il messaggio finale
+            blackout.style.display = "flex";
+            finalMessage.style.display = "block";
+            return;
+        }
+
+        // dimensioni finestra e captcha
+        const maxX = window.innerWidth - captcha.offsetWidth - 10;
+        const maxY = window.innerHeight - captcha.offsetHeight - 10;
+
+        // genera nuova posizione casuale entro i limiti
+        const randomX = Math.random() * maxX;
+        const randomY = Math.random() * maxY;
+
+        captcha.style.left = randomX + "px";
+        captcha.style.top = randomY + "px";
+    }
+
+    // intercetta mouseover e click
+    captcha.addEventListener("mouseenter", moveCaptcha);
+    captcha.addEventListener("click", (e) => {
+        e.preventDefault(); // impedisce il check
+        moveCaptcha();
+    });
+</script>
+</body>
+</html>
