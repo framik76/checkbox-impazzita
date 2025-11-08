@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Checkbox Impazzita con Glitch</title>
+
+    <link href="font.css" rel="stylesheet" />
+
+    <style>
+        html, body {
+            margin: 0; padding: 0; height: 100%;
+            overflow: hidden;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            cursor: default;
+        }
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            transition: background-color 0.1s;
+        }
+        /* Stile checkbox simile a recaptcha */
+        .checkbox-wrapper {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            color: #202124;
+            background: #f9f9f9;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+            padding: 12px 16px;
+            gap: 12px;
+            width: fit-content;
+            transition: transform 0.2s ease, filter 0.1s ease;
+        }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #dadce0;
+            border-radius: 4px;
+            appearance: none;
+            cursor: pointer;
+            position: relative;
+            background-color: white;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .checkbox-wrapper input[type="checkbox"]:checked {
+            background-color: #4caf50;
+            border-color: #4caf50;
+        }
+        .checkbox-wrapper input[type="checkbox"]:checked::after {
+            content: "";
+            position: absolute;
+            left: 9px;
+            top: 5px;
+            width: 7px;
+            height: 14px;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        #final-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Press Start 2P', cursive;
+            font-weight: bold;
+            color: white;
+            display: none;
+            text-align: center;
+            z-index: 9999;
+            user-select: none;
+            white-space: pre-wrap;
+            line-height: 1.1;
+            max-width: 90vw;
+            max-height: 90vh;
+            font-size: calc(min(20vw, 20vh));
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <label class="checkbox-wrapper" id="checkboxWrapper" style="top:50%; left:50%; transform: translate(-50%, -50%)">
+        <input type="checkbox" id="robotCheck" />
+        Non sono un robot
+    </label>
+    <div id="final-text">SEI UN ROBOT</div>
+</div>
+
+<script>
+    const container = document.getElementById('container');
+    const checkboxWrapper = document.getElementById('checkboxWrapper');
+    const finalText = document.getElementById('final-text');
+
+    let passaggi = 0;
+    const maxPassaggiNormali = 20;
+    let impazzito = false;
+    let impazzitoTimer;
+    let glitchTimer;
+    let lampeggioTimer;
+    let glitchInterval;
+
+    function randomPosition(element) {
+        const cWidth = container.clientWidth;
+        const cHeight = container.clientHeight;
+        const elRect = element.getBoundingClientRect();
+        const elWidth = elRect.width;
+        const elHeight = elRect.height;
+        const x = Math.random() * (cWidth - elWidth);
+        const y = Math.random() * (cHeight - elHeight);
+        return {x, y};
+    }
+
+    function animateMove(element, newX, newY, duration = 400) {
+        return new Promise(resolve => {
+            const rect = element.getBoundingClientRect();
+            const cRect = container.getBoundingClientRect();
+            const startX = rect.left - cRect.left;
+            const startY = rect.top - cRect.top;
+            let startTime = null;
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                let progress = Math.min(elapsed / duration, 1);
+                const currentX = startX + (newX - startX) * progress;
+                const currentY = startY + (newY - startY) * progress;
+                element.style.left = currentX + 'px';
+                element.style.top = currentY + 'px';
+                element.style.transform = 'translate(0,0)';
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    resolve();
+                }
+            }
+            requestAnimationFrame(step);
+        });
+    }
+
+    function centerCheckbox(element) {
+        const cWidth = container.clientWidth;
+        const cHeight = container.clientHeight;
+        const elRect = element.getBoundingClientRect();
+        const elWidth = elRect.width;
+        const elHeight = elRect.height;
+        element.style.left = (cWidth/2 - elWidth/2) + 'px';
+        element.style.top = (cHeight/2 - elHeight/2) + 'px';
+        element.style.transform = 'translate(0,0)';
+    }
+
+    let velocita = 400;
+    async function moveCheckboxAnimated() {
+        passaggi++;
+        if (passaggi <= maxPassaggiNormali) {
+            const pos = randomPosition(checkboxWrapper);
+            await animateMove(checkboxWrapper, pos.x, pos.y, velocita);
+            velocita = Math.max(80, velocita * 0.7); // accelera sempre di più
+        } else if (passaggi === maxPassaggiNormali + 1) {
+            impazzito = true;
+            startImpazzimento();
+        }
+    }
+
+    function createRandomCheckboxClone() {
+        const clone = checkboxWrapper.cloneNode(true);
+        clone.style.position = 'absolute';
+        const cWidth = container.clientWidth;
+        const cHeight = container.clientHeight;
+        const x = Math.random() * (cWidth - 150);
+        const y = Math.random() * (cHeight - 60);
+        const scale = 0.5 + Math.random() * 2.5;
+        clone.style.top = y + 'px';
+        clone.style.left = x + 'px';
+        clone.style.transform = `scale(${scale}) rotate(${Math.random() * 360}deg)`;
+        clone.style.opacity = Math.random() * 0.9 + 0.1;
+        clone.style.pointerEvents = 'none';
+
+        clone.style.fontSize = (24 * scale) + 'px';
+        const inputClone = clone.querySelector('input[type="checkbox"]');
+        inputClone.style.width = (32 * scale) + 'px';
+        inputClone.style.height = (32 * scale) + 'px';
+
+        container.appendChild(clone);
+
+        setTimeout(() => {
+            if (clone.parentNode) container.removeChild(clone);
+        }, 2000);
+    }
+
+    async function faseImpazzimentoVelocissimo() {
+        const spostamenti = 20;
+        let durata = 200;
+        for(let i=0; i < spostamenti; i++) {
+            const pos = randomPosition(checkboxWrapper);
+            await animateMove(checkboxWrapper, pos.x, pos.y, durata);
+            durata *= 0.85;
+            durata = Math.max(20, durata);
+        }
+    }
+
+    async function faseImpazzimentoDuplicazioni() {
+        const tempoTotale = 2000; // 2s
+        const intervallo = 100;
+        let elapsed = 0;
+
+        return new Promise(resolve => {
+            // Effetti glitch variables
+            let glitchOn = false;
+
+            glitchInterval = setInterval(() => {
+                elapsed += intervallo;
+
+                // Glitch effetti sul container
+                if (glitchOn) {
+                    container.style.backgroundColor = '#111';
+                    container.style.filter = 'none';
+                    container.style.transform = 'translate(0,0)';
+                } else {
+                    container.style.backgroundColor = 'red';
+                    // filtro glitch random
+                    const hue = Math.floor(Math.random() * 360);
+                    const invert = Math.random() > 0.5 ? 'invert(1)' : 'invert(0)';
+                    const blur = Math.random() > 0.7 ? 'blur(1.5px)' : 'blur(0)';
+                    container.style.filter = `hue-rotate(${hue}deg) ${invert} ${blur}`;
+                    // tremolio
+                    const tx = (Math.random()*8 - 4).toFixed(2);
+                    const ty = (Math.random()*8 - 4).toFixed(2);
+                    container.style.transform = `translate(${tx}px, ${ty}px)`;
+                }
+                glitchOn = !glitchOn;
+
+                createRandomCheckboxClone();
+
+                // Muovi leggermente checkbox principale, scala e ruota
+                const cWidth = container.clientWidth;
+                const cHeight = container.clientHeight;
+                const centerX = cWidth/2;
+                const centerY = cHeight/2;
+                const newX = centerX - checkboxWrapper.offsetWidth/2 + (Math.random()*200 - 100);
+                const newY = centerY - checkboxWrapper.offsetHeight/2 + (Math.random()*200 - 100);
+                checkboxWrapper.style.left = newX + 'px';
+                checkboxWrapper.style.top = newY + 'px';
+
+                const scale = 0.5 + Math.random()*2.5;
+                const rotate = Math.random()*360;
+                checkboxWrapper.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+
+                if (elapsed >= tempoTotale) {
+                    clearInterval(glitchInterval);
+                    container.style.backgroundColor = '#111';
+                    container.style.filter = 'none';
+                    container.style.transform = 'translate(0,0)';
+                    resolve();
+                }
+            }, intervallo);
+        });
+    }
+
+    async function startImpazzimento() {
+        await faseImpazzimentoVelocissimo();
+        await faseImpazzimentoDuplicazioni();
+        startGlitchFinale();
+    }
+
+    function startGlitchFinale() {
+        checkboxWrapper.style.display = 'none';
+
+        const clones = container.querySelectorAll('.checkbox-wrapper');
+        clones.forEach(c => {
+            if (c !== checkboxWrapper) c.remove();
+        });
+
+        finalText.textContent = "SEI UN ROBOT";
+        finalText.style.display = 'block';
+
+        let rosso = true;
+        lampeggioTimer = setInterval(() => {
+            container.style.backgroundColor = rosso ? 'red' : 'black';
+            rosso = !rosso;
+        }, 200);
+
+        glitchTimer = setTimeout(() => {
+            clearInterval(lampeggioTimer);
+            container.style.backgroundColor = 'black';
+            finalText.style.display = 'none';
+            container.innerHTML = '';
+        }, 5000);
+    }
+
+    checkboxWrapper.addEventListener('mouseenter', () => {
+        if (!impazzito) {
+            moveCheckboxAnimated();
+        }
+    });
+
+    function setup() {
+        centerCheckbox(checkboxWrapper);
+    }
+    window.addEventListener('resize', setup);
+    window.addEventListener('load', setup);
+</script>
+
+</body>
+</html>
