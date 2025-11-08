@@ -8,6 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "buildWin": "npx electron-packager . checkboximpazzita --platform=win32 --arch=x64 --out=dist --overwrite",
     "buildMac": "npx electron-packager . checkboximpazzita --platform=darwin --arch=x64 --out=dist --overwrite",
+    "buildMacArm": "npx electron-packager . checkboximpazzita --platform=darwin --arch=arm64 --out=dist --overwrite",
     "buildLinux": "npx electron-packager . checkboximpazzita --platform=linux --arch=x64 --out=dist --overwrite"
   },
   "private": true,
